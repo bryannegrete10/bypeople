@@ -1,0 +1,687 @@
+#!/usr/bin/env bash
+# create_bypeople_scaffold.sh
+# Usage:
+# 1) Save this file as create_bypeople_scaffold.sh
+# 2) On your computer: chmod +x create_bypeople_scaffold.sh
+# 3) Run: ./create_bypeople_scaffold.sh
+# This will create the scaffold files for the ByPeople starter in the current directory.
+# After running:
+#   git init
+#   git add .
+#   git commit -m "chore: initial scaffold for ByPeople"
+#   git branch -M main
+#   git remote add origin <YOUR_GITHUB_REPO_URL>
+#   git push -u origin main
+
+set -e
+
+echo "Creating ByPeople scaffold..."
+
+# create folders
+mkdir -p pages pages/api components lib styles public/images
+
+# README.md
+cat > README.md <<'EOF'
+# ByPeople — Starter (Next.js + Tailwind + Cloudinary + Stripe)
+
+Este repositorio es un scaffold inicial para ByPeople (hubb.mx-inspired). Incluye:
+- Next.js + TypeScript frontend
+- Tailwind CSS
+- API routes: Cloudinary upload, Stripe webhook handler
+- DB schema para Postgres / Supabase
+
+Requisitos
+- Node.js 18+
+- Yarn or npm
+- Cuenta Cloudinary (usar credenciales)
+- Cuenta Stripe (usar test keys) — opcional por ahora
+- Supabase o Postgres (opcional pero recomendado)
+
+Instalación local
+1. Clona el repositorio
+2. Copia .env.example → .env.local y completa las variables
+3. Instala dependencias
+   - npm install
+   - o yarn
+4. Inicia dev server
+   - npm run dev
+   - o yarn dev
+5. Abre http://localhost:3000
+
+Estructura principal
+- pages/ - páginas Next.js
+- pages/api/ - endpoints API (Cloudinary upload, Stripe webhook stub)
+- components/ - componentes React reutilizables
+- lib/ - utilidades (Cloudinary, DB schema)
+- styles/ - CSS global y Tailwind
+- public/ - logos e imágenes públicas
+
+Deploy
+- Recomendado: Vercel para Next.js. Añade las variables de entorno en el dashboard de Vercel.
+- Para Supabase: crea un proyecto y aplica el SQL schema en `lib/db-schema.sql`.
+
+Qué sigue después de este scaffold
+- Conectar Supabase Auth y crear flujos de registro (creador / marca).
+- Implementar conexión con Instagram/TikTok (API/Auth).
+- Flow de creación de campaña y carga de contenido (ya hay API de Cloudinary lista).
+- Checkout Stripe con lógica de retención 50% / 50% y webhook para liberar pagos.
+EOF
+
+# .env.example
+cat > .env.example <<'EOF'
+# Copy to .env.local and replace the values
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-url.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_UNSIGNED_PRESET=your_unsigned_preset_name
+
+# Stripe (add later)
+STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Database (Postgres / Supabase connection)
+DATABASE_URL=postgresql://user:pass@host:port/dbname
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+EOF
+
+# package.json
+cat > package.json <<'EOF'
+{
+  "name": "bypeople-starter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "axios": "^1.4.0",
+    "cloudinary": "^1.30.0",
+    "next": "14.0.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "stripe": "^12.0.0",
+    "streamifier": "^0.1.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.5.3",
+    "typescript": "^5.3.3"
+  }
+}
+EOF
+
+# next.config.js
+cat > next.config.js <<'EOF'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL
+  },
+  images: {
+    domains: ["res.cloudinary.com"]
+  }
+};
+
+module.exports = nextConfig;
+EOF
+
+# tailwind.config.js
+cat > tailwind.config.js <<'EOF'
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./pages/**/*.{ts,tsx,js,jsx}",
+    "./components/**/*.{ts,tsx,js,jsx}"
+  ],
+  theme: {
+    extend: {
+      colors: {
+        charcoal: "#1A1A1A",
+        terracotta: "#E27D60",
+        sunyellow: "#F9D45C",
+        offwhite: "#FAF8F3",
+        beige: "#EDEAE4",
+        softgray: "#D8D5CE"
+      },
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif"],
+        inter: ["Inter", "sans-serif"]
+      }
+    }
+  },
+  plugins: []
+}
+EOF
+
+# postcss.config.js
+cat > postcss.config.js <<'EOF'
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {}
+  }
+}
+EOF
+
+# .gitignore
+cat > .gitignore <<'EOF'
+node_modules/
+.env.local
+.env
+.next/
+.vscode/
+.DS_Store
+EOF
+
+# styles/globals.css
+cat > styles/globals.css <<'EOF'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basic app styles */
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background-color: #FAF8F3;
+  color: #1A1A1A;
+}
+EOF
+
+# pages/_app.tsx
+cat > pages/_app.tsx <<'EOF'
+import '../styles/globals.css'
+import type { AppProps } from 'next/app'
+
+export default function App({ Component, pageProps }: AppProps) {
+  return <Component {...pageProps} />
+}
+EOF
+
+# components/Header.tsx
+cat > components/Header.tsx <<'EOF'
+import Link from "next/link";
+
+export default function Header() {
+  return (
+    <header className="bg-offwhite border-b border-softgray">
+      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <Link href="/">
+          <a className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-sunyellow flex items-center justify-center"></div>
+            <span className="font-poppins font-semibold text-xl text-charcoal">bypeople</span>
+          </a>
+        </Link>
+
+        <nav className="flex items-center gap-4">
+          <Link href="/explore"><a className="text-charcoal">Explorar</a></Link>
+          <Link href="/pricing"><a className="text-charcoal">Precios</a></Link>
+          <Link href="/login"><a className="px-4 py-2 border rounded-md text-charcoal">Inicia sesión</a></Link>
+          <Link href="/signup"><a className="px-4 py-2 bg-terra rounded-md text-white" style={{backgroundColor: '#E27D60'}}>Regístrate</a></Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+EOF
+
+# pages/index.tsx
+cat > pages/index.tsx <<'EOF'
+import Head from "next/head";
+import Link from "next/link";
+import Header from "../components/Header";
+
+export default function Home() {
+  return (
+    <>
+      <Head>
+        <title>ByPeople — UGC para marcas y creadores (MX)</title>
+        <meta name="description" content="Conecta marcas y creadores UGC en México. Plataforma minimalista, humana y pensada para creadores." />
+      </Head>
+
+      <Header />
+
+      <main className="max-w-6xl mx-auto px-6 py-20">
+        <section className="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <h1 className="font-poppins text-4xl font-bold text-charcoal mb-4">
+              Creadores + Marcas. Contenido real que convierte.
+            </h1>
+            <p className="text-lg text-charcoal mb-6" style={{lineHeight: 1.6}}>
+              ByPeople es una plataforma para crear y escalar UGC en México. Encuentra creadores, gestiona campañas y mide ROAS en Meta y TikTok.
+            </p>
+
+            <div className="flex gap-4">
+              <Link href="/signup?role=creator">
+                <a className="px-6 py-3 rounded-md font-poppins text-sm" style={{backgroundColor: '#F9D45C'}}>Soy creador</a>
+              </Link>
+              <Link href="/signup?role=brand">
+                <a className="px-6 py-3 rounded-md border font-poppins text-sm">Soy marca</a>
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <div className="bg-beige rounded-lg p-6">
+              <h3 className="font-poppins font-semibold mb-4">Cómo funciona</h3>
+              <ol className="list-decimal pl-5 space-y-2">
+                <li>Publica un brief o únete como creador.</li>
+                <li>Creadores aplican y entregan UGC (vídeo ≤ 2 min).</li>
+                <li>Revisa, aprueba y paga (50% upfront / 50% on approval).</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-16">
+          <h2 className="font-poppins text-2xl font-semibold mb-4">Para marcas</h2>
+          <p className="mb-8">Contrata paquetes de UGC o trabaja por pieza. Managed service disponible para 15 / 25 videos.</p>
+
+          <h2 className="font-poppins text-2xl font-semibold mb-4">Para creadores</h2>
+          <p>Sube tu portfolio, conecta tus redes y aplica a campañas. Pagos seguros y soporte.</p>
+        </section>
+      </main>
+    </>
+  );
+}
+EOF
+
+# lib/cloudinary.ts
+cat > lib/cloudinary.ts <<'EOF'
+import cloudinary from "cloudinary";
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+export default cloudinary.v2;
+EOF
+
+# pages/api/upload.ts
+cat > pages/api/upload.ts <<'EOF'
+import type { NextApiRequest, NextApiResponse } from "next";
+import cloudinary from "../../lib/cloudinary";
+import streamifier from "streamifier";
+
+/**
+ * Server-side upload route for small files (multipart/form-data via fetch)
+ * For best performance you can use direct unsigned uploads from the browser
+ * with an upload preset. This endpoint shows server-side upload example.
+ */
+export const config = {
+  api: {
+    bodyParser: { sizeLimit: "200mb" }
+  }
+};
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).json({ message: "Method not allowed" });
+
+  try {
+    // Expecting base64 or multipart - example expects body.fileBase64 and optional folder
+    const { fileBase64, folder = "bypeople/portfolio" } = req.body;
+
+    if (!fileBase64) return res.status(400).json({ message: "Missing fileBase64" });
+
+    const buffer = Buffer.from(fileBase64, "base64");
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "auto",
+        use_filename: true,
+        unique_filename: false
+      },
+      (error: any, result: any) => {
+        if (error) return res.status(500).json({ error });
+        return res.status(200).json({
+          url: result.secure_url,
+          public_id: result.public_id,
+          width: result.width,
+          height: result.height,
+          format: result.format
+        });
+      }
+    );
+
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Upload failed", err });
+  }
+}
+EOF
+
+# pages/api/stripe-webhook.ts
+cat > pages/api/stripe-webhook.ts <<'EOF'
+import { buffer } from "micro";
+import type { NextApiRequest, NextApiResponse } from "next";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2024-08-01" });
+
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).end("Method not allowed");
+
+  const buf = await buffer(req);
+  const sig = req.headers["stripe-signature"] as string;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
+
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(buf.toString(), sig, webhookSecret);
+  } catch (err) {
+    console.error("Webhook signature verification failed.", err);
+    return res.status(400).send(`Webhook Error: ${err}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case "checkout.session.completed":
+      const session = event.data.object as Stripe.Checkout.Session;
+      // TODO: Fulfill order: create campaign record, mark payment received (50% paid)
+      console.log("Checkout session completed:", session.id);
+      break;
+    case "payment_intent.succeeded":
+      // handle successful payment
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
+}
+EOF
+
+# lib/db-schema.sql
+cat > lib/db-schema.sql <<'EOF'
+-- Basic Postgres schema for ByPeople (apply to Supabase or Postgres)
+
+-- Enable pgcrypto for gen_random_uuid (Supabase has it enabled by default)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Users table (creators and brands)
+CREATE TABLE IF NOT EXISTS users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text UNIQUE NOT NULL,
+  name text,
+  role text NOT NULL, -- 'creator' | 'brand' | 'admin'
+  bio text,
+  avatar_url text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Creators profile details
+CREATE TABLE IF NOT EXISTS creators (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  instagram_handle text,
+  tiktok_handle text,
+  followers_count integer,
+  ugc_certified boolean DEFAULT false,
+  portfolio_count integer DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Brands table
+CREATE TABLE IF NOT EXISTS brands (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  company_name text,
+  website text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Campaigns
+CREATE TABLE IF NOT EXISTS campaigns (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand_id uuid REFERENCES brands(id) ON DELETE SET NULL,
+  title text NOT NULL,
+  brief text,
+  budget numeric(12,2),
+  status text DEFAULT 'draft', -- draft | live | completed | cancelled
+  start_date timestamptz,
+  end_date timestamptz,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Media uploads (portfolio & campaign submissions)
+CREATE TABLE IF NOT EXISTS media (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  creator_id uuid REFERENCES creators(id) ON DELETE SET NULL,
+  campaign_id uuid REFERENCES campaigns(id) ON DELETE SET NULL,
+  public_url text,
+  public_id text,
+  type text, -- 'video' | 'image'
+  duration_seconds integer,
+  width integer,
+  height integer,
+  uploaded_at timestamptz DEFAULT now()
+);
+
+-- Payments & escrows
+CREATE TABLE IF NOT EXISTS payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id uuid REFERENCES campaigns(id) ON DELETE SET NULL,
+  amount numeric(12,2),
+  currency text DEFAULT 'USD',
+  stripe_payment_intent text,
+  stripe_session text,
+  status text DEFAULT 'pending', -- pending | paid | refunded
+  created_at timestamptz DEFAULT now()
+);
+EOF
+
+# components/PortfolioUploader.tsx
+cat > components/PortfolioUploader.tsx <<'EOF'
+import React, { useState } from "react";
+
+export default function PortfolioUploader() {
+  const [uploading, setUploading] = useState(false);
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const unsignedPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UNSIGNED_PRESET;
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!cloudName || !unsignedPreset) {
+      alert("Cloudinary variables missing. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UNSIGNED_PRESET.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", unsignedPreset);
+
+      const res = await fetch(url, {
+        method: "POST",
+        body: formData
+      });
+
+      const data: any = await res.json();
+      if (data.secure_url) {
+        setUploadedUrls(prev => [data.secure_url, ...prev]);
+      } else {
+        console.error("Upload failed", data);
+        alert("Upload failed. Check Cloudinary preset and console for details.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Upload error. Check console.");
+    } finally {
+      setUploading(false);
+      (e.target as HTMLInputElement).value = "";
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <label className="block text-sm font-medium text-gray-700">Subir video / imagen (≤ 2 min)</label>
+      <input
+        type="file"
+        accept="video/*,image/*"
+        onChange={handleFile}
+        className="block"
+      />
+      {uploading && <p className="text-sm text-gray-500">Subiendo...</p>}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        {uploadedUrls.map((u) => (
+          <div key={u} className="rounded overflow-hidden bg-white shadow-sm p-1">
+            {u.match(/\.(mp4|webm|ogg)$/i) ? (
+              <video src={u} controls className="w-full h-36 object-cover" />
+            ) : (
+              <img src={u} alt="uploaded" className="w-full h-36 object-cover" />
+            )}
+            <a href={u} target="_blank" rel="noopener noreferrer" className="block text-xs truncate mt-1">{u}</a>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+EOF
+
+# pages/signup.tsx
+cat > pages/signup.tsx <<'EOF'
+import Head from "next/head";
+import Header from "../components/Header";
+import PortfolioUploader from "../components/PortfolioUploader";
+import { useState } from "react";
+
+export default function Signup() {
+  const [role, setRole] = useState<"creator"|"brand" | null>(null);
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    // For now we store in localStorage — later we will save to DB via API.
+    const user = { name, role, bio };
+    localStorage.setItem("bypeople_user", JSON.stringify(user));
+    alert("Perfil guardado localmente. Next steps: integrate with backend.");
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Registro — ByPeople</title>
+      </Head>
+
+      <Header />
+
+      <main className="max-w-4xl mx-auto px-6 py-12">
+        <h1 className="font-poppins text-2xl font-bold mb-4">Regístrate</h1>
+
+        <div className="mb-6">
+          <p className="text-sm text-gray-700">¿Eres creador o marca?</p>
+          <div className="flex gap-4 mt-3">
+            <button onClick={() => setRole("creator")} className={`px-4 py-2 rounded ${role==="creator" ? "bg-sunyellow" : "border"}`}>Creador</button>
+            <button onClick={() => setRole("brand")} className={`px-4 py-2 rounded ${role==="brand" ? "bg-terra" : "border"}`} style={{backgroundColor: role==="brand" ? "#E27D60" : undefined}}>Marca / Agencia</button>
+          </div>
+        </div>
+
+        {role && (
+          <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow-sm">
+            <div>
+              <label className="block text-sm font-medium">Nombre</label>
+              <input value={name} onChange={(e)=>setName(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Bio corta</label>
+              <textarea value={bio} onChange={(e)=>setBio(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
+            </div>
+
+            {role === "creator" && (
+              <div>
+                <h3 className="font-semibold mb-2">Portfolio</h3>
+                <PortfolioUploader />
+                <p className="text-xs text-gray-500 mt-2">Súbelo aquí para mostrarlo en tu perfil. Videos deben ser ≤ 2 min.</p>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center">
+              <button type="submit" className="px-4 py-2 bg-charcoal text-white rounded">Guardar perfil</button>
+              <p className="text-sm text-gray-500">Tus datos se guardarán localmente por ahora.</p>
+            </div>
+          </form>
+        )}
+
+      </main>
+    </>
+  );
+}
+EOF
+
+echo "Scaffold created successfully."
+
+cat <<'EOF'
+
+Next steps (what to do now)
+1) Initialize git (if not already):
+   git init
+   git add .
+   git commit -m "chore: initial scaffold for ByPeople"
+   git branch -M main
+   git remote add origin <YOUR_GITHUB_REPO_URL>
+   git push -u origin main
+
+2) Install dependencies locally (optional - for local dev):
+   npm install
+   npm run dev
+   Open http://localhost:3000
+
+3) Set Cloudinary unsigned preset (for uploader to work):
+   - Create Cloudinary account
+   - Console → Settings → Upload → Upload presets → Add preset (unsigned)
+   - Set name and allowed formats (jpg,png,mp4)
+   - Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UNSIGNED_PRESET to .env.local or to Vercel env
+
+4) Deploy to Vercel:
+   - Connect GitHub repo to Vercel and add required env variables
+   - Deploy the project and open the live URL
+
+If you want, after you push the repo I will:
+- Create the Supabase project and apply the DB schema for you (instructions or I can produce a step-by-step).
+- Wire Supabase Auth and role-based signup.
+- Continue implementing the campaign wizard and review flow.
+
+When you're ready, tell me when you pushed the repo (or paste the repo URL) and I will continue by wiring Supabase/Auth and building the onboarding flow.
+
+EOF
+
