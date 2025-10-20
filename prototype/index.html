@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ByPeople — Prototipo Visual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="#" class="logo">
+          <div class="logo-icon"></div>
+          <span class="logo-text">bypeople</span>
+        </a>
+        <nav class="nav">
+          <a href="#" class="nav-link">Explorar</a>
+          <a href="#" class="nav-link">Precios</a>
+          <a href="#" class="nav-link nav-link-border">Inicia sesión</a>
+          <a href="#signup-section" class="nav-link nav-link-primary">Regístrate</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-content">
+            <h1 class="hero-title">Creadores + Marcas. Contenido real que convierte.</h1>
+            <p class="hero-description">
+              ByPeople es una plataforma para crear y escalar UGC en México. Encuentra creadores, 
+              gestiona campañas y mide ROAS en Meta y TikTok.
+            </p>
+            <div class="hero-buttons">
+              <a href="#signup-section" class="btn btn-yellow" onclick="selectRole('creator')">Soy creador</a>
+              <a href="#signup-section" class="btn btn-outlined" onclick="selectRole('brand')">Soy marca</a>
+            </div>
+          </div>
+          <div class="hero-aside">
+            <div class="info-box">
+              <h3 class="info-box-title">Cómo funciona</h3>
+              <ol class="info-list">
+                <li>Publica un brief o únete como creador.</li>
+                <li>Creadores aplican y entregan UGC (vídeo ≤ 2 min).</li>
+                <li>Revisa, aprueba y paga (50% upfront / 50% on approval).</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Additional Info Section -->
+      <section class="info-section">
+        <div class="container">
+          <div class="info-block">
+            <h2 class="section-title">Para marcas</h2>
+            <p class="section-description">
+              Contrata paquetes de UGC o trabaja por pieza. Managed service disponible para 15 / 25 videos.
+            </p>
+          </div>
+          <div class="info-block">
+            <h2 class="section-title">Para creadores</h2>
+            <p class="section-description">
+              Sube tu portfolio, conecta tus redes y aplica a campañas. Pagos seguros y soporte.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Signup Section -->
+      <section id="signup-section" class="signup-section">
+        <div class="container-small">
+          <h1 class="page-title">Regístrate</h1>
+
+          <!-- Role Selection -->
+          <div class="role-selection">
+            <p class="role-label">¿Eres creador o marca?</p>
+            <div class="role-buttons">
+              <button type="button" id="role-creator" class="role-btn" onclick="selectRoleInForm('creator')">
+                Creador
+              </button>
+              <button type="button" id="role-brand" class="role-btn" onclick="selectRoleInForm('brand')">
+                Marca / Agencia
+              </button>
+            </div>
+          </div>
+
+          <!-- Signup Form -->
+          <form id="signup-form" class="signup-form hidden" onsubmit="handleSignup(event)">
+            <div class="form-group">
+              <label class="form-label">Nombre</label>
+              <input type="text" id="name-input" class="form-input" placeholder="Tu nombre" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Bio corta</label>
+              <textarea id="bio-input" class="form-textarea" placeholder="Cuéntanos sobre ti..." rows="4" required></textarea>
+            </div>
+
+            <!-- Portfolio Uploader (only for creators) -->
+            <div id="portfolio-section" class="portfolio-section hidden">
+              <h3 class="portfolio-title">Portfolio</h3>
+              <div class="uploader-container">
+                <label class="form-label">Subir video / imagen (≤ 2 min)</label>
+                <input type="file" id="file-input" class="file-input" accept="video/*,image/*" onchange="handleFileUpload(event)">
+                <div id="upload-status" class="upload-status hidden"></div>
+                <p class="upload-hint">Súbelo aquí para mostrarlo en tu perfil. Videos deben ser ≤ 2 min.</p>
+              </div>
+
+              <!-- Preview Grid -->
+              <div id="preview-grid" class="preview-grid"></div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Guardar perfil</button>
+              <p class="form-hint">Tus datos se guardarán localmente por ahora.</p>
+            </div>
+          </form>
+
+          <!-- Success Message -->
+          <div id="success-message" class="success-message hidden">
+            <div class="success-content">
+              <div class="success-icon">✓</div>
+              <h2 class="success-title">¡Perfil guardado con éxito!</h2>
+              <p class="success-description">Tu perfil ha sido guardado localmente. En la versión final, esto se guardará en nuestra base de datos.</p>
+              <div class="success-details" id="success-details"></div>
+              <button class="btn btn-primary" onclick="resetForm()">Crear otro perfil</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-text">© 2025 ByPeople. Prototipo visual para revisión de flujos.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
